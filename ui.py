@@ -131,16 +131,39 @@ class AppUI(ft.Column):
         self.page.update()
 
     def start_monitoring(self, e):
-        """Verifica objetos antes de mostrar alertas"""
-        if not self.objects_list.controls:
-            print("⚠ Intento de monitoreo sin objetos")
-            self.alert_text.value = "⚠ No hay objetos registrados."
+        """Verifica SOLO los objetos activados antes de mostrar alertas"""
+
+        active_objects = []
+
+        # Recorremos la lista de objetos en la UI
+        for card in self.objects_list.controls:
+            if isinstance(card, ft.Card) and isinstance(card.content, ft.Container):
+                row = card.content.content  # Aquí está el ft.Row con los elementos dentro
+                if isinstance(row, ft.Row):
+                    object_name = row.controls[1].value  # Nombre del objeto
+                    toggle_button = row.controls[2]  # El Switch de activación
+                    
+                    if isinstance(toggle_button, ft.Switch):
+                        print(f"🔍 {object_name}: {'Activado' if toggle_button.value else 'Desactivado'}")
+                        
+                        if toggle_button.value:  # Si el switch está activado
+                            active_objects.append(object_name)
+
+        # Depuración: imprimir los objetos activados
+        print(f"✅ Objetos ACTIVADOS: {active_objects}")
+
+        if not active_objects:
+            self.alert_text.value = "⚠ No hay objetos ACTIVADOS para monitorear."
             self.page.update()
             return
 
-        alert = self.backend.check_objects()
-        if alert:
-            self.alert_text.value = f"🚨 ¡Alerta! {alert} se ha alejado"
+        # Simulación del backend con los objetos activados
+        lost_object = self.backend.check_objects()
+        print(f"🚨 Objeto perdido detectado por backend: {lost_object}")
+
+        if lost_object and lost_object in active_objects:
+            self.alert_text.value = f"🚨 ¡Alerta! {lost_object} se ha alejado"
         else:
-            self.alert_text.value = "✅ Todos los objetos están en rango"
+            self.alert_text.value = "✅ Todos los objetos activados están en rango"
+
         self.page.update()

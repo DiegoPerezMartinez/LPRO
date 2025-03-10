@@ -1,8 +1,0 @@
-(Tener instalado python)
-python -m venv .venv
-.venv\Scripts\activate
-pip install flet[all]
-flet --version
-(Para este paso tienes que tener git instalado)
-flet create
-flet run

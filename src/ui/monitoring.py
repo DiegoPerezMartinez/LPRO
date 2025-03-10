@@ -1,12 +1,15 @@
+"""Monitoring module."""
 import random
 import flet as ft
 
 def check_objects(tracked_objects):
+    """Check if any object is out of range."""
     if random.random() < 0.05:  # Simulación de pérdida (30% de probabilidad)
         return random.choice(tracked_objects)
     return None
 
 def start_monitoring(page, objects_list, alert_text):
+    """Start monitoring the objects."""
     active_objects = []
 
     for card in objects_list.controls:

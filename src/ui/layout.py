@@ -1,8 +1,11 @@
+"""Module to define the main layout of the app."""
 import flet as ft
 from .dialog import open_add_dialog
 from .monitoring import start_monitoring
 
 class AppUI(ft.Column):
+    """Class to define the main layout of the app."""
+
     def __init__(self, page):
         super().__init__()
         self.page = page
@@ -40,14 +43,22 @@ class AppUI(ft.Column):
                 alignment=ft.alignment.center,
             ),
             self.objects_list,
-            ft.Container(self.add_button, padding=10, alignment=ft.alignment.center),
-            ft.Container(self.start_button, padding=10, alignment=ft.alignment.center),
-            ft.Container(self.theme_toggle, padding=10, alignment=ft.alignment.center),  # Moved here
-            ft.Container(self.alert_text, padding=10, alignment=ft.alignment.center),
+            ft.Container(self.add_button,
+                          padding=10,
+                          alignment=ft.alignment.center),
+            ft.Container(self.start_button,
+                         padding=10,
+                         alignment=ft.alignment.center),
+            ft.Container(self.theme_toggle,
+                         padding=10,
+                         alignment=ft.alignment.center),
+            ft.Container(self.alert_text,
+                         padding=10,
+                         alignment=ft.alignment.center),
         ]
 
-    # 🔧 Corregida la indentación del método
     def toggle_theme(self, page, is_dark_mode):
+        """Toggle between light and dark theme."""
         page.theme_mode = ft.ThemeMode.DARK if is_dark_mode else ft.ThemeMode.LIGHT
         page.update()
         self.theme_toggle.selected = not self.theme_toggle.selected

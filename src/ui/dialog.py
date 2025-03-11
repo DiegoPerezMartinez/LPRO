@@ -10,7 +10,7 @@ def open_add_dialog(page, objects_list):
         options=[ft.dropdown.Option(str(m)) for m in [1, 3, 5, 10]]
     )
 
-    def add_object_handler():
+    def add_object_handler(e):
         """Handle the addition of a new object"""
         if not name_input.value or not range_dropdown.value:
             name_input.error_text = "⚠ Nombre y alcance requeridos"

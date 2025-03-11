@@ -1,7 +1,9 @@
 """Module to define the main layout of the app."""
 import flet as ft
+from database import load_objects
 from .dialog import open_add_dialog
 from .monitoring import start_monitoring
+from .objects import add_object
 
 class AppUI(ft.Column):
     """Class to define the main layout of the app."""
@@ -36,6 +38,8 @@ class AppUI(ft.Column):
             )
         )
 
+        self.load_objects_from_db()
+
         self.controls = [
             ft.Container(
                 ft.Text("Objetos Vinculados", size=18, weight="bold"),
@@ -62,3 +66,9 @@ class AppUI(ft.Column):
         page.theme_mode = ft.ThemeMode.DARK if is_dark_mode else ft.ThemeMode.LIGHT
         page.update()
         self.theme_toggle.selected = not self.theme_toggle.selected
+
+    def load_objects_from_db(self):
+        """Carga los objetos desde MongoDB al iniciar la app"""
+        saved_objects = load_objects()
+        for obj in saved_objects:
+            add_object(self.page, self.objects_list, obj["name"], obj["range"], obj["is_active"])

@@ -19,25 +19,25 @@ python -m venv .venv
 .venv\Scripts\activate
 ```
 
-- En **Linux/MacOS**:
-
-```bash
-source .venv/bin/activate
-```
-
 3. Instalar Flet con todas sus dependencias:
 
 ```bash
 pip install flet[all]
 ```
 
-4. Verificar la versión de Flet instalada:
+4. Instala MongoDB :
 
 ```bash
-flet --version
+https://www.mongodb.com/try/download/community
 ```
 
-5. Ejecutar una aplicación Flet:
+5. Instala pymongo para interactuar con Mongo desde Python :
+
+```bash
+pip install pymongo
+```
+
+6. Ejecutar una aplicación Flet:
 
 ```bash
 flet run

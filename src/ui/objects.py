@@ -39,11 +39,11 @@ def add_object(page, objects_list, name, range_val, is_active=True):
         content=ft.Container(
             ft.Row(
                 [
-                    ft.Icon(ft.icons.RADIO_BUTTON_CHECKED, color=ft.colors.BLUE),
+                    ft.Icon(ft.Icons.RADIO_BUTTON_CHECKED, color=ft.Colors.BLUE),
                     ft.Text(f"{name} (Alcance: {range_val}m)", size=16),
                     toggle_button,
                     status_text,
-                    ft.IconButton(ft.icons.DELETE,
+                    ft.IconButton(ft.Icons.DELETE,
                                   on_click=confirm_delete),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,

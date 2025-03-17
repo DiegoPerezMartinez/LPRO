@@ -14,6 +14,9 @@ class AppUI(ft.Column):
         self.objects_list = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO)
         self.alert_text = ft.Text("", color="red", size=16, weight="bold")
 
+        self.page.theme_mode = ft.ThemeMode.DARK
+        self.page.bgcolor = ft.Colors.BLACK
+        
         self.add_button = ft.ElevatedButton(
             "Añadir Objeto", 
             icon=ft.Icons.ADD_CIRCLE_OUTLINE,
@@ -32,10 +35,11 @@ class AppUI(ft.Column):
         self.theme_toggle = ft.IconButton(
             icon="dark_mode",
             selected_icon="light_mode",
-            on_click=lambda e: self.toggle_theme(page, e.control.selected),
+            on_click=lambda e: self.toggle_theme(page),
             style=ft.ButtonStyle(
             color={"": ft.Colors.BLACK, "selected": ft.Colors.WHITE},
-            )
+            ),
+            selected=page.theme_mode == ft.ThemeMode.DARK
         )
 
         self.load_objects_from_db()
@@ -61,11 +65,14 @@ class AppUI(ft.Column):
                          alignment=ft.alignment.center),
         ]
 
-    def toggle_theme(self, page, is_dark_mode):
+    def toggle_theme(self, page):
         """Toggle between light and dark theme."""
+        is_dark_mode = page.theme_mode != ft.ThemeMode.DARK
         page.theme_mode = ft.ThemeMode.DARK if is_dark_mode else ft.ThemeMode.LIGHT
+        self.theme_toggle.selected = is_dark_mode
+        bg_color = ft.Colors.BLACK if is_dark_mode else ft.Colors.WHITE
+        page.bgcolor = bg_color
         page.update()
-        self.theme_toggle.selected = not self.theme_toggle.selected
 
     def load_objects_from_db(self):
         """Carga los objetos desde MongoDB al iniciar la app"""

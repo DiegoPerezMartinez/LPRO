@@ -1,5 +1,6 @@
 """Module to define the main layout of the app."""
 import flet as ft
+import asyncio
 from database import load_objects
 from .dialog import open_add_dialog
 from .monitoring import start_monitoring
@@ -16,7 +17,6 @@ class AppUI(ft.Column):
 
         self.page.theme_mode = ft.ThemeMode.DARK
         self.page.bgcolor = ft.Colors.BLACK
-        
         self.add_button = ft.ElevatedButton(
             "Añadir Objeto", 
             icon=ft.Icons.ADD_CIRCLE_OUTLINE,
@@ -24,12 +24,6 @@ class AppUI(ft.Column):
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         )
 
-        self.start_button = ft.ElevatedButton(
-            "Iniciar Monitoreo", 
-            icon=ft.Icons.NOTIFICATIONS_ACTIVE,
-            on_click=lambda e: start_monitoring(page, self.objects_list, self.alert_text),
-            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
-        )
 
         # 🔄 Botón para cambiar entre tema claro y oscuro
         self.theme_toggle = ft.IconButton(
@@ -54,9 +48,6 @@ class AppUI(ft.Column):
             ft.Container(self.add_button,
                           padding=10,
                           alignment=ft.alignment.center),
-            ft.Container(self.start_button,
-                         padding=10,
-                         alignment=ft.alignment.center),
             ft.Container(self.theme_toggle,
                          padding=10,
                          alignment=ft.alignment.center),
@@ -78,4 +69,9 @@ class AppUI(ft.Column):
         """Carga los objetos desde MongoDB al iniciar la app"""
         saved_objects = load_objects()
         for obj in saved_objects:
-            add_object(self.page, self.objects_list, obj["name"], obj["range"], obj["is_active"])
+            add_object(self.page, self.objects_list, obj["name"], obj["id"], obj["is_active"])
+
+    def start_monitoring(self):
+        """Ejecuta la función de monitoreo en segundo plano."""
+        loop = asyncio.get_event_loop()
+        loop.create_task(self.monitor_objects())

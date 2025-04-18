@@ -36,7 +36,11 @@ https://www.mongodb.com/try/download/community
 ```bash
 pip install pymongo
 ```
+5. Instala bleak para usar BLE desde Python :
 
+```bash
+pip install bleak
+```
 6. Ejecutar una aplicación Flet:
 
 ```bash

@@ -5,9 +5,9 @@ client = MongoClient("mongodb://localhost:27017/")
 db = client["lossnt_db"]
 collection = db["objects"]
 
-def save_object(name, range_val, is_active):
+def save_object(name, id, is_active):
     """Guardar un objeto en la base de datos"""
-    existing_object = collection.find_one({"name": name, "range": range_val})
+    existing_object = collection.find_one({"name": name, "id": id})
     if existing_object:
         # Actualizar el estado en lugar de duplicar
         collection.update_one(
@@ -18,7 +18,7 @@ def save_object(name, range_val, is_active):
         # Insertar nuevo objeto si no existe
         collection.insert_one({
             "name": name,
-            "range": range_val,
+            "id": id,
             "is_active": is_active
         })
 
@@ -26,13 +26,13 @@ def load_objects():
     """Carga los objetos desde la base de datos"""
     return list(collection.find())
 
-def update_object_status(name, range_val, is_active):
+def update_object_status(name, id, is_active):
     """Actualizar el estado de un objeto en la base de datos"""
     collection.update_one(
-        {"name": name, "range": range_val},
+        {"name": name, "id": id},
         {"$set": {"is_active": is_active}}
     )
 
-def delete_object(name, range_val):
+def delete_object(name, id):
     """Eliminar un objeto de la base"""
-    collection.delete_one({"name": name, "range": range_val})
+    collection.delete_one({"name": name, "id": id})

@@ -1,23 +1,40 @@
-"""Implement dialog to add a new object to the list of objects"""
+import asyncio
 import flet as ft
 from .objects import add_object
 
-def open_add_dialog(page, objects_list):
-    """Open dialog to add a new object"""
+def open_add_dialog(page, objects_list, ble_handler):
+    """Open dialog to add a new object using shared BLE handler."""
+    status_text = ft.Text("🔍 Añadiendo objeto, por favor acerque la etiqueta al lector...", size=16)
     name_input = ft.TextField(label="Nombre del objeto", autofocus=True)
-    range_dropdown = ft.Dropdown(
-        label="Alcance (m)",
-        options=[ft.dropdown.Option(str(m)) for m in [1, 3, 5, 10]]
-    )
+    uuid_field = ft.TextField(label="UUID", read_only=True)
+
+    # Esta variable almacenará el último UUID leído
+    last_uuid = {"value": None}
+
+    # Función de callback para manejar la respuesta BLE
+    async def read_label():
+        await ble_handler.send_command("LEER_ETIQUETA")
+        label_data = await ble_handler.wait_for_response()
+
+        # Actualizar el campo de UUID con el valor recibido
+        last_uuid["value"] = label_data
+        uuid_field.value = label_data
+        status_text.value = f"✅ Etiqueta detectada: {label_data}"
+        page.update()
 
     def add_object_handler(e):
-        """Handle the addition of a new object"""
-        if not name_input.value or not range_dropdown.value:
-            name_input.error_text = "⚠ Nombre y alcance requeridos"
+        """Handle the confirmation of the object."""
+        if not name_input.value or not uuid_field.value:
+            name_input.error_text = "⚠ Nombre y UUID requeridos"
             page.update()
             return
 
-        add_object(page, objects_list, name_input.value.strip(), range_dropdown.value)
+        add_object(page, objects_list, name_input.value.strip(), uuid_field.value)
+        page.close(dialog)
+        page.update()
+
+    def cancel_handler(e):
+        """Handle cancellation of the dialog."""
         page.close(dialog)
         page.update()
 
@@ -25,10 +42,20 @@ def open_add_dialog(page, objects_list):
         modal=True,
         open=True,
         title=ft.Text("Añadir nuevo objeto"),
-        content=ft.Column([name_input, range_dropdown]),
-        actions=[ft.ElevatedButton("Añadir", on_click=add_object_handler)],
+        content=ft.Column([
+            status_text,
+            name_input,
+            uuid_field,
+        ]),
+        actions=[
+            ft.ElevatedButton("Añadir", on_click=add_object_handler),
+            ft.TextButton("Cancelar", on_click=cancel_handler)
+        ],
     )
 
     page.dialog = dialog
     page.open(dialog)
     page.update()
+
+    # Lanzar la lectura BLE en segundo plano (ya no se reconecta aquí)
+    asyncio.ensure_future(read_label())

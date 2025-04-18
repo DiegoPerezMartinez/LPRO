@@ -2,7 +2,7 @@
 import flet as ft
 from database import save_object, update_object_status, delete_object
 
-def add_object(page, objects_list, name, range_val, is_active=True):
+def add_object(page, objects_list, name, id, is_active=True):
     """Add a new object to the list."""
     status_text = ft.Text(f"Estado: {'Activado' if is_active else 'Desactivado'}")
 
@@ -11,7 +11,7 @@ def add_object(page, objects_list, name, range_val, is_active=True):
         nonlocal is_active
         is_active = e.control.value  # Guardar el nuevo estado
         status_text.value = f"Estado: {'Activado' if is_active else 'Desactivado'}"
-        update_object_status(name, range_val, is_active)
+        update_object_status(name, id, is_active)
         page.update()  # Forzar actualización de la interfaz
 
     def confirm_delete(e):
@@ -23,7 +23,7 @@ def add_object(page, objects_list, name, range_val, is_active=True):
                 ft.TextButton("Cancelar", on_click=lambda e: page.close(confirm_dialog)),
                 ft.TextButton("Confirmar", 
                               on_click=lambda e: remove_object(page, objects_list, card, 
-                                                               name, range_val, confirm_dialog))
+                                                               name, id, confirm_dialog))
             ],
             modal=True
         )
@@ -40,7 +40,7 @@ def add_object(page, objects_list, name, range_val, is_active=True):
             ft.Row(
                 [
                     ft.Icon(ft.Icons.RADIO_BUTTON_CHECKED, color=ft.Colors.BLUE),
-                    ft.Text(f"{name} (Alcance: {range_val}m)", size=16),
+                    ft.Text(f"{name} (ID: {id})", size=16),
                     toggle_button,
                     status_text,
                     ft.IconButton(ft.Icons.DELETE,
@@ -53,12 +53,12 @@ def add_object(page, objects_list, name, range_val, is_active=True):
     )
 
     objects_list.controls.append(card)
-    save_object(name, range_val, is_active)
+    save_object(name, id, is_active)
     page.update()
 
-def remove_object(page, objects_list, card, name, range_val, confirm_dialog):
+def remove_object(page, objects_list, card, name, id, confirm_dialog):
     """Remove an object from the list."""
     objects_list.controls.remove(card)
-    delete_object(name, range_val)
+    delete_object(name, id)
     page.close(confirm_dialog)
     page.update()

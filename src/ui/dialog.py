@@ -14,8 +14,7 @@ def open_add_dialog(page, objects_list, ble_handler):
     # Función de callback para manejar la respuesta BLE
     async def read_label():
         await ble_handler.send_command("LEER_ETIQUETA")
-        label_data = await ble_handler.wait_for_response()
-
+        label_data = ble_handler.wait_for_response()
         # Actualizar el campo de UUID con el valor recibido
         last_uuid["value"] = label_data
         uuid_field.value = label_data
@@ -56,6 +55,4 @@ def open_add_dialog(page, objects_list, ble_handler):
     page.dialog = dialog
     page.open(dialog)
     page.update()
-
-    # Lanzar la lectura BLE en segundo plano (ya no se reconecta aquí)
-    asyncio.ensure_future(read_label())
+    page.run_task(read_label)

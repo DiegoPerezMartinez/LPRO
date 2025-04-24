@@ -2,7 +2,7 @@
 import flet as ft
 from database import save_object, update_object_status, delete_object
 
-def add_object(page, objects_list, name, id, is_active=True):
+def add_object(page, objects_list, name, uuid, is_active=True):
     """Add a new object to the list."""
     status_text = ft.Text(f"Estado: {'Activado' if is_active else 'Desactivado'}")
 
@@ -11,7 +11,7 @@ def add_object(page, objects_list, name, id, is_active=True):
         nonlocal is_active
         is_active = e.control.value  # Guardar el nuevo estado
         status_text.value = f"Estado: {'Activado' if is_active else 'Desactivado'}"
-        update_object_status(name, id, is_active)
+        update_object_status(name, uuid, is_active)
         page.update()  # Forzar actualización de la interfaz
 
     def confirm_delete(e):
@@ -23,7 +23,7 @@ def add_object(page, objects_list, name, id, is_active=True):
                 ft.TextButton("Cancelar", on_click=lambda e: page.close(confirm_dialog)),
                 ft.TextButton("Confirmar", 
                               on_click=lambda e: remove_object(page, objects_list, card, 
-                                                               name, id, confirm_dialog))
+                                                               name, uuid, confirm_dialog))
             ],
             modal=True
         )
@@ -35,30 +35,44 @@ def add_object(page, objects_list, name, id, is_active=True):
         on_change=toggle_active
     )
 
+    card = create_object_card(name, uuid, toggle_button, status_text, confirm_delete, page)
+
+
+    objects_list.controls.append(card)
+    save_object(name, uuid, is_active)
+    page.update()
+
+def remove_object(page, objects_list, card, name, uuid, confirm_dialog):
+    """Remove an object from the list."""
+    objects_list.controls.remove(card)
+    delete_object(name, uuid)
+    page.close(confirm_dialog)
+    page.update()
+
+def create_object_card(name, uuid, toggle_button, status_text, confirm_delete, page):
+    """Create a card for the object."""
+    def show_info_dialog(e):
+        info_dialog = ft.AlertDialog(
+            title=ft.Text(name),
+            content=ft.Text(f"UUID: {uuid}"),
+            actions=[ft.TextButton("Cerrar", on_click=lambda e: page.close(info_dialog))],
+        )
+        page.dialog = info_dialog
+        page.open(info_dialog)
+
     card = ft.Card(
         content=ft.Container(
             ft.Row(
                 [
-                    ft.Icon(ft.Icons.RADIO_BUTTON_CHECKED, color=ft.Colors.BLUE),
-                    ft.Text(f"{name} (ID: {id})", size=16),
+                    ft.IconButton(ft.Icons.INFO_OUTLINE, on_click=show_info_dialog, tooltip="Información"),
+                    ft.Text(name, size=16),
                     toggle_button,
                     status_text,
-                    ft.IconButton(ft.Icons.DELETE,
-                                  on_click=confirm_delete),
+                    ft.IconButton(ft.Icons.DELETE, on_click=confirm_delete),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
             ),
             padding=10,
         )
     )
-
-    objects_list.controls.append(card)
-    save_object(name, id, is_active)
-    page.update()
-
-def remove_object(page, objects_list, card, name, id, confirm_dialog):
-    """Remove an object from the list."""
-    objects_list.controls.remove(card)
-    delete_object(name, id)
-    page.close(confirm_dialog)
-    page.update()
+    return card

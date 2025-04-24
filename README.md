@@ -8,7 +8,7 @@
 1. Crear un entorno virtual:
 
 ```bash
-python -m venv .venv
+python -m venv lpro
 ```
 
 2. Activar el entorno virtual:
@@ -16,7 +16,7 @@ python -m venv .venv
 - En **Windows**:
 
 ```bash
-.venv\Scripts\activate
+lpro\Scripts\activate
 ```
 
 3. Instalar Flet con todas sus dependencias:

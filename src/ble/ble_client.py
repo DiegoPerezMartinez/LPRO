@@ -1,8 +1,7 @@
 """Módulo para manejar la conexión BLE y recibir notificaciones."""
-from bleak import BleakClient
 import asyncio
-import threading
 from queue import Queue
+from bleak import BleakClient
 
 class BLEHandler:
     """Clase para manejar la conexión BLE y recibir notificaciones."""
@@ -52,7 +51,7 @@ class BLEHandler:
         except Exception as e:
             print(f"[BLE] Error al recibir respuesta: {e}")
             return None
-        
+
     async def send_known_tags(self, tags):
         """Envía etiquetas conocidas al dispositivo BLE."""
         print(f"[BLE] Enviando etiquetas conocidas: {tags}")

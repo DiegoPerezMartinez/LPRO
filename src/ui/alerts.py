@@ -1,40 +1,44 @@
-# notifier.py
+"""Módulo para manejar alertas visuales y sonoras en la interfaz de usuario."""
 import os
-from database import load_objects
+import winsound
 import threading
 import flet as ft
-import winsound
+from database import load_objects
 
-# Ruta del archivo de sonido (puedes cambiarla a tu gusto)
-SOUND_FILE = "alerta.mp3"
-
-def play_sound():
+def play_sound(mode="BUS"):
     """Reproduce un sonido en segundo plano."""
-    sound_path = os.path.join(os.path.dirname(__file__), '..', 'sounds', 'Enemy_Missing_ping_SFX.wav')
+    filename = "Enemy_Missing_ping_SFX.wav" if mode == "BUS" else "Caution_ping_SFX.wav"
+    sound_path = os.path.join(os.path.dirname(__file__),
+                              '..', 'sounds', filename)
     sound_path = os.path.abspath(sound_path)
     try:
         winsound.PlaySound(sound_path, winsound.SND_FILENAME | winsound.SND_ASYNC)
     except Exception as e:
         print(f"[🔊 Error al reproducir sonido] {e}")
 
-def notify_detection(page, uuid_detected):
-    """Notifica visual y sonoramente la detección de un UUID."""
-    # Buscar el objeto por UUID
-    matched = next((obj for obj in load_objects() if obj["uuid"].upper() == uuid_detected.upper()), None)
+def notify_detection(page, uuid_detected, mode="BUS"):
+    """Notifica visual y sonoramente la detección de un UUID según el modo."""
+    matched = next((obj for obj in load_objects()
+                    if obj["uuid"].upper() == uuid_detected.upper()), None)
 
     if matched:
         name = matched["name"]
-        message = f"📦 Objeto detectado: {name}"
     else:
         name = uuid_detected
-        message = f"🆔 Etiqueta desconocida detectada: {uuid_detected}"
 
-    # Mostrar alerta visual
-    snackbar = ft.SnackBar(ft.Text(message), bgcolor=ft.colors.GREEN_400, show_close_icon=True)
+    if mode == "BUS":
+        message = f"📦 Objeto detectado: {name}" if matched else f"🆔 Etiqueta desconocida detectada: {uuid_detected}"
+        color = ft.colors.GREEN_400
+    else:  # modo SEGUIMIENTO
+        message = f"❌ Objeto PERDIDO: {name}"
+        color = ft.colors.RED_400
+
+    snackbar = ft.SnackBar(ft.Text(message),
+                           bgcolor=color,
+                           show_close_icon=True)
     page.snack_bar = snackbar
     page.snack_bar.open = True
     page.open(snackbar)
     page.update()
 
-    # Reproducir sonido en hilo separado
-    threading.Thread(target=play_sound, daemon=True).start()
+    threading.Thread(target=play_sound, args=(mode,), daemon=True).start()

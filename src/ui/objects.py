@@ -2,9 +2,13 @@
 import flet as ft
 from database import save_object, update_object_status, delete_object
 
-def add_object(page, objects_list, name, uuid, is_active=True):
+def add_object(page, objects_list, name, uuid, is_active=True, ble_handler=None):
     """Add a new object to the list."""
     status_text = ft.Text(f"Estado: {'Activado' if is_active else 'Desactivado'}")
+
+    async def toggle_active_ble():
+        if ble_handler:
+            await ble_handler.send_command(f"UPDATE:{uuid.upper()}")
 
     def toggle_active(e):
         """Toggle the active state of the object."""
@@ -12,7 +16,8 @@ def add_object(page, objects_list, name, uuid, is_active=True):
         is_active = e.control.value  # Guardar el nuevo estado
         status_text.value = f"Estado: {'Activado' if is_active else 'Desactivado'}"
         update_object_status(name, uuid, is_active)
-        page.update()  # Forzar actualización de la interfaz
+        page.update()
+        page.run_task(toggle_active_ble)
 
     def confirm_delete(e):
         """Show a confirmation dialog before deleting the object."""
@@ -21,9 +26,9 @@ def add_object(page, objects_list, name, uuid, is_active=True):
             content=ft.Text(f"¿Seguro que quieres eliminar '{name}'?"),
             actions=[
                 ft.TextButton("Cancelar", on_click=lambda e: page.close(confirm_dialog)),
-                ft.TextButton("Confirmar", 
-                              on_click=lambda e: remove_object(page, objects_list, card, 
-                                                               name, uuid, confirm_dialog))
+                ft.TextButton("Confirmar",
+                              on_click=lambda e: remove_object(page, objects_list, card,
+                                                               name, uuid, confirm_dialog, ble_handler))
             ],
             modal=True
         )
@@ -42,10 +47,14 @@ def add_object(page, objects_list, name, uuid, is_active=True):
     save_object(name, uuid, is_active)
     page.update()
 
-def remove_object(page, objects_list, card, name, uuid, confirm_dialog):
+def remove_object(page, objects_list, card, name, uuid, confirm_dialog, ble_handler=None):
     """Remove an object from the list."""
     objects_list.controls.remove(card)
     delete_object(name, uuid)
+    if ble_handler:
+        async def send_del():
+            await ble_handler.send_command(f"DEL:{uuid.upper()}")
+        page.run_task(send_del)
     page.close(confirm_dialog)
     page.update()
 
@@ -67,7 +76,9 @@ def create_object_card(name, uuid, toggle_button, status_text, confirm_delete, p
         content=ft.Container(
             ft.Row(
                 [
-                    ft.IconButton(ft.Icons.INFO_OUTLINE, on_click=show_info_dialog, tooltip="Información"),
+                    ft.IconButton(ft.Icons.INFO_OUTLINE,
+                                  on_click=show_info_dialog,
+                                  tooltip="Información"),
                     ft.Text(name, size=16),
                     toggle_button,  
                     ft.IconButton(ft.Icons.DELETE, on_click=confirm_delete),

@@ -13,6 +13,7 @@ class AppUI(ft.Column):
         super().__init__()
         self.page = page
         self.ble_handler = ble_handler
+        self.current_mode = "BUS"
         self.objects_list = ft.Column(spacing=10, scroll=ft.ScrollMode.AUTO)
         self.alert_text = ft.Text("", color="red", size=16, weight="bold")
 
@@ -38,9 +39,9 @@ class AppUI(ft.Column):
         )
 
         self.mode_toggle = ft.ElevatedButton(
-            "Cambiar modo", 
-            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
-            #on_click=lambda e: open_add_dialog(page, self.objects_list, self.ble_handler),
+            "Cambiar a modo Seguimiento", 
+            icon=ft.Icons.SWAP_HORIZ,
+            on_click=lambda e: self.toggle_mode(),
             style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
         )
 
@@ -80,7 +81,12 @@ class AppUI(ft.Column):
         """Carga los objetos desde MongoDB al iniciar la app"""
         saved_objects = load_objects()
         for obj in saved_objects:
-            add_object(self.page, self.objects_list, obj["name"], obj["uuid"], obj["is_active"])
+            add_object(self.page,
+                       self.objects_list,
+                       obj["name"],
+                       obj["uuid"],
+                       obj["is_active"],
+                       self.ble_handler)
 
     def send_active_tags_to_esp32(self):
         """Envía todos los UUID activos al ESP32 vía BLE"""
@@ -100,3 +106,25 @@ class AppUI(ft.Column):
 
         self.page.run_task(send)
 
+    def toggle_mode(self):
+        """Alterna entre modos Búsqueda y Seguimiento y envía el comando por BLE."""
+        async def send_mode_command():
+            if not self.ble_handler.client.is_connected:
+                print("[BLE] No conectado, intentando conectar...")
+                await self.ble_handler.connect()
+
+            # Cambiar el modo actual
+            self.current_mode = "SEG" if self.current_mode == "BUS" else "BUS"
+            command = f"MODE:{self.current_mode}"
+            print(f"[BLE] Enviando comando: {command}")
+            await self.ble_handler.send_command(command)
+
+            # Actualizar el texto del botón
+            if self.current_mode == "BUS":
+                self.mode_toggle.text = "Cambiar a modo Seguimiento"
+            else:
+                self.mode_toggle.text = "Cambiar a modo Búsqueda"
+
+            self.page.update()
+
+        self.page.run_task(send_mode_command)

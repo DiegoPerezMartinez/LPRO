@@ -1,6 +1,7 @@
-import asyncio
+"""This module contains the function to open a dialog for adding a new object."""
 import flet as ft
 from .objects import add_object
+from queue import Empty
 
 def open_add_dialog(page, objects_list, ble_handler):
     """Open dialog to add a new object using shared BLE handler."""
@@ -13,12 +14,19 @@ def open_add_dialog(page, objects_list, ble_handler):
 
     # Función de callback para manejar la respuesta BLE
     async def read_label():
+        while not ble_handler.notification_queue.empty():
+            try:
+                ble_handler.notification_queue.get_nowait()
+            except Empty:
+                break
         await ble_handler.send_command("LEER_ETIQUETA")
         label_data = ble_handler.wait_for_response()
-        # Actualizar el campo de UUID con el valor recibido
-        last_uuid["value"] = label_data
-        uuid_field.value = label_data
-        status_text.value = f"✅ Etiqueta detectada: {label_data}"
+        if label_data and label_data != last_uuid["value"]:
+            last_uuid["value"] = label_data
+            uuid_field.value = label_data
+            status_text.value = f"✅ Etiqueta detectada: {label_data}"
+        else:
+            status_text.value = "⚠ Ya se usó esta etiqueta. Intente con otra."
         page.update()
 
     def add_object_handler(e):
@@ -28,7 +36,7 @@ def open_add_dialog(page, objects_list, ble_handler):
             page.update()
             return
 
-        add_object(page, objects_list, name_input.value.strip(), uuid_field.value)
+        add_object(page, objects_list, name_input.value.strip(), uuid_field.value,True ,ble_handler)
         page.close(dialog)
         page.update()
 

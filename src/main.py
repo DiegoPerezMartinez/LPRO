@@ -2,9 +2,9 @@ import threading
 import asyncio
 import flet as ft
 from ui.layout import AppUI
+from ui.alerts import notify_detection
 from constants import PROJECT_NAME, BLE_ADDRESS, CHAR_UUID_TX, CHAR_UUID_RX
 from ble.ble_client import BLEHandler
-from ui.alerts import notify_detection
 
 # Un evento para indicar cuando BLE está conectado
 connection_event = asyncio.Event()
@@ -32,7 +32,7 @@ def main(page: ft.Page):
 
     def on_ble_data(data):
         print(f"Received BLE data: {data}")
-        notify_detection(page, data)
+        notify_detection(page, data, mode=app_ui.current_mode)
 
     ble_handler = BLEHandler(BLE_ADDRESS, CHAR_UUID_TX, CHAR_UUID_RX, on_ble_data)
     run_ble_loop(ble_handler)

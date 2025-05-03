@@ -1,4 +1,5 @@
 """Module to define the main layout of the app."""
+import asyncio
 import flet as ft
 from database import load_objects
 from .dialog import open_add_dialog
@@ -36,6 +37,13 @@ class AppUI(ft.Column):
             selected=page.theme_mode == ft.ThemeMode.DARK
         )
 
+        self.mode_toggle = ft.ElevatedButton(
+            "Cambiar modo", 
+            icon=ft.Icons.ADD_CIRCLE_OUTLINE,
+            #on_click=lambda e: open_add_dialog(page, self.objects_list, self.ble_handler),
+            style=ft.ButtonStyle(shape=ft.RoundedRectangleBorder(radius=10)),
+        )
+
         self.load_objects_from_db()
 
         self.controls = [
@@ -48,6 +56,9 @@ class AppUI(ft.Column):
             ft.Container(self.add_button,
                           padding=10,
                           alignment=ft.alignment.center),
+            ft.Container(self.mode_toggle,
+                         padding=10,
+                         alignment=ft.alignment.center),
             ft.Container(self.theme_toggle,
                          padding=10,
                          alignment=ft.alignment.center),
@@ -70,3 +81,22 @@ class AppUI(ft.Column):
         saved_objects = load_objects()
         for obj in saved_objects:
             add_object(self.page, self.objects_list, obj["name"], obj["uuid"], obj["is_active"])
+
+    def send_active_tags_to_esp32(self):
+        """Envía todos los UUID activos al ESP32 vía BLE"""
+        async def send():
+            if not self.ble_handler.client.is_connected:
+                print("[BLE] No conectado, intentando conectar...")
+                await self.ble_handler.connect()  # Asegura conexión y descubrimiento
+
+            all_objects = load_objects()
+            active_uuids = [obj["uuid"] for obj in all_objects if obj["is_active"]]
+
+            for uuid in active_uuids:
+                command = f"ADD:{uuid.upper()}"
+                print(f"[BLE] Enviando UUID activo: {command}")
+                await self.ble_handler.send_command(command)
+                await asyncio.sleep(0.1)  # Pequeña pausa entre comandos
+
+        self.page.run_task(send)
+

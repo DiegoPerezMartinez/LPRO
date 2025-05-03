@@ -18,6 +18,9 @@ class BLEHandler:
         """Conecta al dispositivo BLE y comienza a recibir notificaciones."""
         await self.client.connect()
         print(f"[BLE] Conectado a {self.address}")
+        # Espera hasta que el cliente esté completamente listo
+        await self.client.get_services()
+        print("[BLE] Conectado y servicios descubiertos.")
         await self.client.start_notify(self.tx_uuid, self.notification_handler)
 
     def notification_handler(self, sender, data):
@@ -34,8 +37,10 @@ class BLEHandler:
 
     async def send_command(self, command: str):
         """Envía un comando al dispositivo BLE (como 'LEER_ETIQUETA')."""
+        if not self.client.is_connected:
+            print("[BLE] No conectado. Ignorando comando.")
+            return
         await self.client.write_gatt_char(self.rx_uuid, command.encode("utf-8"))
-        print(f"[BLE] Enviado comando: {command}")
 
 
     def wait_for_response(self, timeout=30):
@@ -47,3 +52,10 @@ class BLEHandler:
         except Exception as e:
             print(f"[BLE] Error al recibir respuesta: {e}")
             return None
+        
+    async def send_known_tags(self, tags):
+        """Envía etiquetas conocidas al dispositivo BLE."""
+        print(f"[BLE] Enviando etiquetas conocidas: {tags}")
+        for tag in tags:
+            await self.send_command(f"ADD:{tag}")
+            await asyncio.sleep(0.1)  # un pequeño delay para que el ESP32 procese

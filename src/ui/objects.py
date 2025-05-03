@@ -54,7 +54,10 @@ def create_object_card(name, uuid, toggle_button, status_text, confirm_delete, p
     def show_info_dialog(e):
         info_dialog = ft.AlertDialog(
             title=ft.Text(name),
-            content=ft.Text(f"UUID: {uuid}"),
+            content=ft.Column([
+                ft.Text(f"UUID: {uuid}"),
+                status_text  # Ahora el estado se muestra dentro del diálogo
+            ]),
             actions=[ft.TextButton("Cerrar", on_click=lambda e: page.close(info_dialog))],
         )
         page.dialog = info_dialog
@@ -66,8 +69,7 @@ def create_object_card(name, uuid, toggle_button, status_text, confirm_delete, p
                 [
                     ft.IconButton(ft.Icons.INFO_OUTLINE, on_click=show_info_dialog, tooltip="Información"),
                     ft.Text(name, size=16),
-                    toggle_button,
-                    status_text,
+                    toggle_button,  
                     ft.IconButton(ft.Icons.DELETE, on_click=confirm_delete),
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
